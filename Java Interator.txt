@@ -1,0 +1,4 @@
+
+         Object element = it.next();
+         if(element.equals("###"))//Hints: use instanceof operator
+

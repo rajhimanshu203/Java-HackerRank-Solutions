@@ -1,0 +1,174 @@
+
+
+class SumInLeavesVisitor extends TreeVis {
+     private int result = 0;
+    
+    public int getResult() {
+        return result;
+    }
+
+    public void visitNode(TreeNode node) {
+    }
+
+    public void visitLeaf(TreeLeaf leaf) {
+          result += leaf.getValue();
+    }
+}
+
+class ProductOfRedNodesVisitor extends TreeVis {
+    private int result = 1;
+    private static long MODULO_FACTOR = ((long) Math.pow(10, 9) + 7);
+    public int getResult() {
+        return result;
+    }
+
+    public void visitNode(TreeNode node) {
+          visit(node);
+    }
+
+    public void visitLeaf(TreeLeaf leaf) {
+          visit(leaf);
+    }
+    
+    private void visit(Tree tree) {
+        if (tree.getColor() == Color.RED) {
+            long temp = result;
+            temp = (temp * tree.getValue());
+            result = (int) (temp % MODULO_FACTOR);
+            
+        }
+    }
+}
+
+class FancyVisitor extends TreeVis {
+   int nonLeafSum = 0;
+    int leafSum = 0;
+    public int getResult() {
+        return (int) Math.abs(nonLeafSum - leafSum);
+    }
+
+    public void visitNode(TreeNode node) {
+        if (node.getDepth() % 2 == 0) {
+            nonLeafSum += node.getValue();
+        }
+    }
+
+    public void visitLeaf(TreeLeaf leaf) {
+        if (leaf.getColor() == Color.GREEN) {
+            leafSum += leaf.getValue();    
+        }    
+    }
+}
+
+public class Solution {
+  
+    public static Tree solve() {
+         Scanner sc = new Scanner(System.in);
+        Setup setup = new Setup(sc);
+        
+        Tree[] tree = new Tree[setup.n];
+        
+        int currentDepth = -1;
+
+        Queue<Context> toVisit = new ArrayDeque<>();
+
+        toVisit.add(new Context(currentDepth, 0, null));
+
+
+        while (!toVisit.isEmpty()) {
+            Context ctx = toVisit.poll();
+            if (tree[ctx.index] != null) {
+                continue;
+            }
+            int currentIndex = ctx.index;
+            currentDepth =  ctx.depth + 1;
+            TreeNode parent = ctx.parent;
+
+            
+            List<Integer> child = setup.adjacencies.get(currentIndex);
+            List<Integer> filteredIndexes = new ArrayList<>();
+            for (int i = 0; i < child.size(); i++) {
+                if (tree[child.get(i)] == null) {
+                    filteredIndexes.add(child.get(i));
+                }
+            }
+
+            boolean isLeaf = filteredIndexes.isEmpty();
+
+            if (isLeaf) {
+                System.err.println("currentIndex" + currentIndex + " is leaf " + currentDepth);
+                tree[currentIndex] = new TreeLeaf(setup.values[currentIndex], setup.colors[currentIndex], currentDepth);
+            }
+            else {
+                System.err.println("currentIndex" + currentIndex + " is not leaf " + currentDepth);
+                tree[currentIndex] = new TreeNode(setup.values[currentIndex], setup.colors[currentIndex], currentDepth);
+                
+                for (Integer filteredIndex : filteredIndexes) {
+                toVisit.add(new Context(currentDepth, filteredIndex, (TreeNode) tree[currentIndex]));
+            }
+            }
+
+           
+
+            if (parent != null) {
+                parent.addChild(tree[currentIndex]);
+            }
+        }
+        
+        return tree[0];
+    }
+
+    static class Context {
+        int depth;
+        int index;
+        TreeNode parent;
+
+        Context(int depth, int index, TreeNode parent) {
+            this.depth = depth;
+            this.index = index;
+            this.parent = parent;
+        }
+    } 
+    
+    
+    static class Setup {
+        int n;
+        int[] values;
+        Color[] colors;
+        Map<Integer, List<Integer>> adjacencies = new HashMap<>();
+        
+        Setup(Scanner sc) {
+            n = sc.nextInt();
+            values = new int[n];
+            colors = new Color[n];
+            adjacencies = new HashMap<>();
+
+            for(int i = 0; i < n; i++) {
+                values[i] = sc.nextInt();
+            }
+            for(int i = 0; i < n; i++) {
+                colors[i] =  Color.values()[sc.nextInt()];
+            }
+            for(int i = 0; i < (n - 1); i++) {
+                int leftIndex = sc.nextInt() - 1;
+                int rightIndex = sc.nextInt() - 1;
+
+                List<Integer> adj = adjacencies.get(leftIndex);
+                if (adj == null) {
+                    adj = new ArrayList<>();
+                    adjacencies.put(leftIndex, adj);
+                }
+                adj.add(rightIndex);
+
+                List<Integer> adj2 = adjacencies.get(rightIndex);
+                if (adj2 == null) {
+                    adj2 = new ArrayList<>();
+                    adjacencies.put(rightIndex, adj2);
+                }
+                adj2.add(leftIndex);
+            }
+        
+        }
+        //read the tree from STDIN and return its root as a return value of this function
+    }
+
